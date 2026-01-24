@@ -1,9 +1,16 @@
-// sélecteur des zones de la cible
+// sélecteur data
 const zones = document.querySelectorAll(".zone");
 const inputPlayerName = document.querySelector("#playerName");
+
+//sélecteurs algo
 const arrayPlayers = [];
 let gameStarted = false;
 const arrayCurrentVolley = [];
+
+//sélecteur display
+const displayInfoContainer = document.querySelector(".info");
+const divPlayersContainer = document.createElement("div");
+displayInfoContainer.appendChild(divPlayersContainer);
 
 class Player {
   constructor(name) {
@@ -40,6 +47,7 @@ function createNewPlayer() {
       inputPlayerName.value = "";
       //Affiche le tableau des joueurs dans la console
       console.log(arrayPlayers);
+      displayLastPlayer();
     }
     if (arrayPlayers.length === 1) {
       createStartBtn();
@@ -49,20 +57,20 @@ function createNewPlayer() {
   }
 }
 
-function returnScore(callback) {
-  zones.forEach((zone) => {
-    zone.addEventListener("click", () => {
-      const type = zone.dataset.type;
-      const value = Number(zone.dataset.value);
+// function returnScore(callback) {
+//   zones.forEach((zone) => {
+//     zone.addEventListener("click", () => {
+//       const type = zone.dataset.type;
+//       const value = Number(zone.dataset.value);
 
-      let score = value;
-      if (type === "double") score *= 2;
-      if (type === "triple") score *= 3;
+//       let score = value;
+//       if (type === "double") score *= 2;
+//       if (type === "triple") score *= 3;
 
-      callback(score);
-    });
-  });
-}
+//       callback(score);
+//     });
+//   });
+// }
 
 //Créer un bouton pour commencer la partie une fois qu'au moins un joueur a été ajouté et le supprime quand la partie est lancée
 function createStartBtn() {
@@ -80,27 +88,32 @@ function createStartBtn() {
   divInfo.appendChild(startBtn);
   //Créer un event listener pour lancer une fonction quand on clic sur le bouton
   startBtn.addEventListener("click", () => {
-    startGame();
+    handleGame();
     //Partie lancée donc on retire le bouton Start
     startBtn.remove();
   });
 }
 
-function startGame() {
-
-  gameStarted = true;
-
-  returnScore((score) => {
-    handleGame()
-    if (!gameStarted) return;
-    arrayCurrentVolley.push(score);
-    console.log(arrayCurrentVolley);
-  });
-}
-
 function handleGame() {
-  if (arrayCurrentVolley.length === 3) {
-    gameStarted = false;
-    alert("Tableau lancé rempli")
-  }
+  gameStarted = true;
+  console.log("La partie commence !");
 }
+
+function displayLastPlayer() {
+  const player = arrayPlayers[arrayPlayers.length - 1];
+
+  const divPlayerStats = document.createElement("div");
+  divPlayersContainer.appendChild(divPlayerStats);
+
+  const divNameStat = document.createElement("div");
+  divNameStat.classList.add("nameStat");
+  divNameStat.innerText = player.name;
+  divPlayerStats.appendChild(divNameStat);
+
+  const divScoreStat = document.createElement("div");
+  divScoreStat.classList.add("scoreStat");
+  divScoreStat.innerText = player.score;
+  divPlayerStats.appendChild(divScoreStat);
+
+}
+
