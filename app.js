@@ -6,6 +6,8 @@ const inputPlayerName = document.querySelector("#playerName");
 const arrayPlayers = [];
 let gameStarted = false;
 const arrayCurrentVolley = [];
+let currentPlayerName = ''
+let currentPlayerIndex = 0
 
 //sélecteur display
 const displayInfoContainer = document.querySelector(".info");
@@ -17,8 +19,8 @@ class Player {
     this.name = name;
     this.score = 301;
     this.volley = 3;
-    this.lastScores = [0];
-    this.currentPlayer = false;
+    this.lastScores = [];
+    this.isCurrentPlayer = false;
   }
 }
 
@@ -76,6 +78,14 @@ function displayLastPlayer() {
   divPlayerStats.appendChild(divScoreStat);
 }
 
+function updateDisplay() {
+
+}
+
+function defineNextPlayer() {
+  
+}
+
 //Créer un bouton pour commencer la partie une fois qu'au moins un joueur a été ajouté et le supprime quand la partie est lancée
 function createStartBtn() {
   //Récupère la div dans laquelle apparaitra le bouton Start
@@ -99,46 +109,66 @@ function createStartBtn() {
 }
 
 function defineCurrentPlayer() {
-  
+  arrayPlayers[currentPlayerIndex].isCurrentPlayer = true
+  handleDartScore()
 }
 
-function handleVolleyScore() {
-
-}
 
 function handleDartScore() {
   //on utilise une promesse car on attend le clic du user pour continuer le script
   return new Promise((resolve) => {
-
+    //initialise la fonction qui va gérer la data en fonction du click user
     const onClick = (event) => {
-
+      //setup l'event click sur chaques zones
       const zone = event.currentTarget;
+      //récupère le type de zone (simple ou double) de l'attribut data-type dans le HTML 
       const type = zone.dataset.type;
+      //idem pour data-value
       const value = Number(zone.dataset.value);
 
+      //applique le multiple en fonction de la zone cliquée
       let score = value;
       if (type === "double") score *= 2;
       if (type === "triple") score *= 3;
 
-
+      //retire l'event click pour s'assurer un seul score par appel
       zones.forEach(z => z.removeEventListener("click", onClick));
 
+      //ajoute le résultat de la flèchette au tableau de la volée en cours
       arrayCurrentVolley.push(score);
       console.log(arrayCurrentVolley);
       console.log("Score ajouté :", score);
+      //retourne la promesse score
       resolve(score);
+      handleVolleyScore()
     };
-
+    //
     zones.forEach((zone) => {
       zone.addEventListener("click", onClick);
     });
   });
 }
 
+function handleVolleyScore() {
+  if (arrayCurrentVolley.length < 3) {
+    handleDartScore()
+    console.log(arrayCurrentVolley);
+  } else {
+    let volleySum = arrayCurrentVolley.reduce((acc, value)=> acc + value, 0)
+    arrayPlayers[currentPlayerIndex].lastScores.push(volleySum)
+    arrayPlayers[currentPlayerIndex].score -= volleySum
+    arrayCurrentVolley.length = [0]
+    console.log(arrayPlayers);
+    alert('Valider la vollée ?')
+    updateDisplay()
+    defineNextPlayer()
+  }
+}
+
+
 function handleGame() {
   gameStarted = true;
   console.log("La partie commence !");
   defineCurrentPlayer()
-  handleVolleyScore()
 }
 
