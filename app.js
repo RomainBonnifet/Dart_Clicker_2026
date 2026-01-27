@@ -57,20 +57,24 @@ function createNewPlayer() {
   }
 }
 
-// function returnScore(callback) {
-//   zones.forEach((zone) => {
-//     zone.addEventListener("click", () => {
-//       const type = zone.dataset.type;
-//       const value = Number(zone.dataset.value);
 
-//       let score = value;
-//       if (type === "double") score *= 2;
-//       if (type === "triple") score *= 3;
-
-//       callback(score);
-//     });
-//   });
-// }
+function displayLastPlayer() {
+  //récupère le dernier joueur ajouté dans le tableau des joueurs
+  const player = arrayPlayers[arrayPlayers.length - 1];
+  //créer la div qui contiendra les stats du joueur
+  const divPlayerStats = document.createElement("div");
+  divPlayersContainer.appendChild(divPlayerStats);
+  //ajoute une div dans la divPlayerStats pour afficher le nom du joueur et une class
+  const divNameStat = document.createElement("div");
+  divNameStat.classList.add("nameStat");
+  divNameStat.innerText = player.name;
+  divPlayerStats.appendChild(divNameStat);
+  //ajoute une div dans la divPlayerStats pour afficher le score du joueur et une class
+  const divScoreStat = document.createElement("div");
+  divScoreStat.classList.add("scoreStat");
+  divScoreStat.innerText = player.score;
+  divPlayerStats.appendChild(divScoreStat);
+}
 
 //Créer un bouton pour commencer la partie une fois qu'au moins un joueur a été ajouté et le supprime quand la partie est lancée
 function createStartBtn() {
@@ -94,26 +98,47 @@ function createStartBtn() {
   });
 }
 
+function defineCurrentPlayer() {
+  
+}
+
+function handleVolleyScore() {
+
+}
+
+function handleDartScore() {
+  //on utilise une promesse car on attend le clic du user pour continuer le script
+  return new Promise((resolve) => {
+
+    const onClick = (event) => {
+
+      const zone = event.currentTarget;
+      const type = zone.dataset.type;
+      const value = Number(zone.dataset.value);
+
+      let score = value;
+      if (type === "double") score *= 2;
+      if (type === "triple") score *= 3;
+
+
+      zones.forEach(z => z.removeEventListener("click", onClick));
+
+      arrayCurrentVolley.push(score);
+      console.log(arrayCurrentVolley);
+      console.log("Score ajouté :", score);
+      resolve(score);
+    };
+
+    zones.forEach((zone) => {
+      zone.addEventListener("click", onClick);
+    });
+  });
+}
+
 function handleGame() {
   gameStarted = true;
   console.log("La partie commence !");
-}
-
-function displayLastPlayer() {
-  const player = arrayPlayers[arrayPlayers.length - 1];
-
-  const divPlayerStats = document.createElement("div");
-  divPlayersContainer.appendChild(divPlayerStats);
-
-  const divNameStat = document.createElement("div");
-  divNameStat.classList.add("nameStat");
-  divNameStat.innerText = player.name;
-  divPlayerStats.appendChild(divNameStat);
-
-  const divScoreStat = document.createElement("div");
-  divScoreStat.classList.add("scoreStat");
-  divScoreStat.innerText = player.score;
-  divPlayerStats.appendChild(divScoreStat);
-
+  defineCurrentPlayer()
+  handleVolleyScore()
 }
 
