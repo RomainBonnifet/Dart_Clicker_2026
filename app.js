@@ -87,29 +87,6 @@ function updateDisplay() {
   }
 }
 
-function defineNextPlayer() {
-  // 1. On retire le statut de joueur actuel
-  arrayPlayers[currentPlayerIndex].isCurrentPlayer = false;
-
-  // 2. On vérifie si on est à la fin de la liste
-  if (currentPlayerIndex === arrayPlayers.length - 1) {
-    currentPlayerIndex = 0; // On revient au début
-    console.log('Retour au premier joueur');
-    console.log(arrayPlayers);
-    
-  } else {
-    currentPlayerIndex++; // On passe au suivant (équivalent à currentPlayerIndex += 1)
-    console.log('Joueur suivant');
-    console.log(arrayPlayers);
-  }
-
-  // 3. On définit le nouveau joueur actuel
-  arrayPlayers[currentPlayerIndex].isCurrentPlayer = true;
-  
-  // 4. On relance la gestion du score
-  handleVolleyScore();
-}
-
 //Créer un bouton pour commencer la partie une fois qu'au moins un joueur a été ajouté et le supprime quand la partie est lancée
 function createStartBtn() {
   //Récupère la div dans laquelle apparaitra le bouton Start
@@ -134,11 +111,34 @@ function createStartBtn() {
   });
 }
 
+
 function define1stPlayer() {
   arrayPlayers[currentPlayerIndex].isCurrentPlayer = true
   handleDartScore()
 }
 
+function defineNextPlayer() {
+  // 1. On retire le statut de joueur actuel
+  arrayPlayers[currentPlayerIndex].isCurrentPlayer = false;
+
+  // 2. On vérifie si on est à la fin de la liste
+  if (currentPlayerIndex === arrayPlayers.length - 1) {
+    currentPlayerIndex = 0; // On revient au début
+    console.log('Retour au premier joueur');
+    console.log(arrayPlayers);
+    
+  } else {
+    currentPlayerIndex++; // On passe au suivant (équivalent à currentPlayerIndex += 1)
+    console.log('Joueur suivant');
+    console.log(arrayPlayers);
+  }
+
+  // 3. On définit le nouveau joueur actuel
+  arrayPlayers[currentPlayerIndex].isCurrentPlayer = true;
+  
+  // 4. On relance la gestion du score
+  handleVolleyScore();
+}
 
 function handleDartScore() {
   //on utilise une promesse car on attend le clic du user pour continuer le script
@@ -205,8 +205,27 @@ function handleVolleyScore() {
     alert('Valider la vollée ?')
     //met à jour l'affichage du score du joueur
     updateDisplay()
-    //change le joueur en cours
-    defineNextPlayer()
+    //on vérifie si un joueur a atteint zéro = fin de partie le joueur en question a gagné
+    checkScore(volleySum)
   }
+}
+
+function checkScore(volleySum) {
+  const player = arrayPlayers[currentPlayerIndex];
+
+  if (player.score === 0) {
+    alert(player.name + " a gagné !");
+    return;
+  }
+
+  if (player.score < 0) {
+    alert("Vous devez finir par un score exact !");
+    // on annule la volée précédente
+    player.score += volleySum;
+  }
+
+  updateDisplay();
+
+  defineNextPlayer();
 }
 
