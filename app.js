@@ -1,6 +1,7 @@
 // sélecteur data
 const zones = document.querySelectorAll(".zone");
 const inputPlayerName = document.querySelector("#playerName");
+let baseScore = 301
 
 //sélecteurs algo
 const arrayPlayers = [];
@@ -17,7 +18,7 @@ displayInfoContainer.appendChild(divPlayersContainer);
 class Player {
   constructor(name) {
     this.name = name;
-    this.score = 301;
+    this.score = baseScore;
     this.lastScores = [];
     this.isCurrentPlayer = false;
   }
@@ -48,11 +49,14 @@ function createNewPlayer() {
       inputPlayerName.value = "";
       //Affiche le tableau des joueurs dans la console
       console.log(arrayPlayers);
+      //Affiche les joueurs + leurs points de départ dans le DOM
       displayLastPlayer();
     }
+    //Si un joueurs est ajouté, on appel la fonction qui affiche le bouton Start dans le DOM
     if (arrayPlayers.length === 1) {
       createStartBtn();
     }
+  //Gestion & affichage de l'erreur
   } catch (error) {
     alert(error.message);
   }
@@ -60,20 +64,24 @@ function createNewPlayer() {
 
 
 function displayLastPlayer() {
+  //Défini le joueur à afficher : la dernière entrée du tableau des joueurs
   const player = arrayPlayers[arrayPlayers.length - 1];
+  //Créer une div d'affichage individuelle du joueur qui ira dans la div d'affichage globale des joueurs dans le DOM
   const divPlayerStats = document.createElement("div");
-  // On ajoute un ID unique basé sur l'index du joueur pour actualiser l'affichage du bon joueur
+  // On ajoute un ID unique basé sur l'index du joueur pour actualiser plus tard l'affichage du bon joueur
   divPlayerStats.id = `player-container-${arrayPlayers.length - 1}`;
+  // Ajoute la div indiv du joueur dans la div d'affichage des joueurs du DOM
   divPlayersContainer.appendChild(divPlayerStats);
 
+  //Même principe, mais pour le nom du joueur
   const divNameStat = document.createElement("div");
   divNameStat.classList.add("nameStat");
   divNameStat.innerText = player.name;
   divPlayerStats.appendChild(divNameStat);
 
+  // & le score de base du joueur
   const divScoreStat = document.createElement("div");
   divScoreStat.classList.add("scoreStat");
-  // On lui donne une classe spécifique ou on la retrouve via le parent
   divScoreStat.innerText = player.score;
   divPlayerStats.appendChild(divScoreStat);
 }
@@ -166,6 +174,7 @@ function handleDartScore() {
       console.log("Score ajouté :", score);
       //retourne la promesse score
       resolve(score);
+      
       handleVolleyScore()
     };
     //
@@ -175,7 +184,7 @@ function handleDartScore() {
   });
 }
 
-//gère le résultat de la vollée des 3 fléchettes, enregistre l'historique de chaques dart et le total de chaques volée, par joueur
+//gère le résultat de la vollée des 3 fléchettes, enregistre l'historique de chaques dart et le score total de chaques volée, par joueur
 function handleVolleyScore() {
   //on s'assure que seulement 3 fléchettes seront comptabilisée
   if (arrayCurrentVolley.length < 3) {
@@ -195,7 +204,7 @@ function handleVolleyScore() {
     //sauvegarde de l'historique des vollées
     arrayPlayers[currentPlayerIndex].lastScores.push(currentPlayerVolley)
 
-    //update du score restant par joueur
+    //update du score restant du joueur en cours
     arrayPlayers[currentPlayerIndex].score -= volleySum
     //on vide le tableau arrayCurrentVolley
     arrayCurrentVolley.length = 0
@@ -203,18 +212,21 @@ function handleVolleyScore() {
     //TODO Fonction pour valider ou non la vollée actuelle
 
     alert('Valider la vollée ?')
-    //met à jour l'affichage du score du joueur
+    //met à jour l'affichage du score des joueur
     updateDisplay()
-    //on vérifie si un joueur a atteint zéro = fin de partie le joueur en question a gagné
+    
     checkScore(volleySum)
   }
 }
 
+//vérifie si le joueur à atteint 0 : Fin de la partie
+// si score négatif, on annule la dernière vollée
 function checkScore(volleySum) {
   const player = arrayPlayers[currentPlayerIndex];
 
   if (player.score === 0) {
     alert(player.name + " a gagné !");
+    resetGameLoop()
     return;
   }
 
@@ -229,3 +241,25 @@ function checkScore(volleySum) {
   defineNextPlayer();
 }
 
+// pour enfin re-afficher le bouton Start qui va relancer une boucle de jeu. 
+function resetGameLoop() {
+  //On va boucler sur chaques joueurs de arrayPlayers pour remettre score à zéro,
+  // vider le tableau d'historiques du joueurs lastScores,
+  // et remettre à false isCurrentPlayer 
+  arrayPlayers.forEach((player)=>{
+    player.score = 301
+    player.lastScores = []
+    player.isCurrentPlayer = false
+    updateScoresDisplay()
+  })
+  console.log(arrayPlayers);
+  updateScoresDisplay()
+  createStartBtn()
+}
+
+function updateScoresDisplay () {
+  const scoresDivs = document.querySelectorAll('.scoreStat')
+  scoresDivs.forEach((scoreDiv)=>{
+    scoreDiv.innerText = baseScore
+  })
+}
