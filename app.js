@@ -1,5 +1,4 @@
 // sélecteur data
-const zones = document.querySelectorAll(".zone");
 const inputPlayerName = document.querySelector("#playerName");
 let baseScore = 301
 
@@ -118,8 +117,10 @@ function updateDisplay() {
 
 //Créer un bouton pour commencer la partie une fois qu'au moins un joueur a été ajouté et le supprime quand la partie est lancée
 function createStartBtn() {
-  //Récupère la div dans laquelle apparaitra le bouton Start
-  const divInfo = document.querySelector(".info");
+  let missedBtn = document.querySelector('.missedBtn')
+  if (missedBtn) {
+    missedBtn.remove()
+  }
   //Créer le bouton
   const startBtn = document.createElement("button");
   //Créer le texte du bonton
@@ -129,13 +130,13 @@ function createStartBtn() {
   //Ajoute le texte dans le bouton
   startBtn.appendChild(startBtnText);
   //Ajoute  le bouton dans la div d'affichage des infos
-  divInfo.prepend(startBtn);
+  displayInfoContainer.prepend(startBtn);
   //Créer un event listener pour lancer une fonction quand on clic sur le bouton
   startBtn.addEventListener("click", () => {
-    define1stPlayer()
     console.log('partie lancée');
-    //partie lancée donc l'ajout de joueur sera bloqué
-    gameIsStarted = true
+    //partie lancée donc l'ajout de joueur sera bloqué et missedBtn sera activé
+    gameIsStarted = true;
+    define1stPlayer()
     //Partie lancée donc on retire le bouton Start
     startBtn.remove();
   });
@@ -143,6 +144,7 @@ function createStartBtn() {
 
 function define1stPlayer() {
   arrayPlayers[currentPlayerIndex].isCurrentPlayer = true
+  addMissedBtn()
   handleDartScore()
 }
 
@@ -166,6 +168,7 @@ function defineNextPlayer() {
 }
 
 function handleDartScore() {
+  console.log('handleDartScore');
   //on utilise une promesse car on attend le clic du user pour continuer le script
   return new Promise((resolve) => {
     //initialise la fonction qui va gérer la data en fonction du click user
@@ -176,29 +179,37 @@ function handleDartScore() {
       const type = zone.dataset.type;
       //idem pour data-value
       const value = Number(zone.dataset.value);
-
       //applique le multiple en fonction de la zone cliquée
       let score = value;
       if (type === "double") score *= 2;
       if (type === "triple") score *= 3;
-
       //retire l'event click pour s'assurer un seul score par appel
       zones.forEach(z => z.removeEventListener("click", onClick));
-
       //ajoute le résultat de la flèchette au tableau de la volée en cours
       arrayCurrentVolley.push(score);
       console.log(arrayCurrentVolley);
       console.log("Score ajouté :", score);
       //retourne la promesse score
       resolve(score);
-      
+      //on appel la fonction qui gère le retour de la promesse
       handleVolleyScore()
     };
-    //
+    const zones = document.querySelectorAll(".zone");
     zones.forEach((zone) => {
       zone.addEventListener("click", onClick);
     });
   });
+}
+
+function addMissedBtn() {
+  if (!gameIsStarted) return
+  let missedBtn = document.createElement('button')
+  missedBtn.classList.add('missedBtn')
+  missedBtn.classList.add('zone')
+  missedBtn.innerText = 'Raté: +0'
+  missedBtn.setAttribute("data-value", "0")
+  displayInfoContainer.prepend(missedBtn)
+  return missedBtn
 }
 
 //gère le résultat de la vollée des 3 fléchettes, enregistre l'historique de chaques dart et le score total de chaques volée, par joueur
@@ -220,18 +231,15 @@ function handleVolleyScore() {
     }
     //sauvegarde de l'historique des vollées
     arrayPlayers[currentPlayerIndex].lastScores.push(currentPlayerVolley)
-
     //update du score restant du joueur en cours
     arrayPlayers[currentPlayerIndex].score -= volleySum
     //on vide le tableau arrayCurrentVolley
     arrayCurrentVolley.length = 0
-
-    //TODO Fonction pour valider ou non la vollée actuelle
-
+    // TODO Fonction pour valider ou non la vollée actuelle
     alert('Valider la vollée ?')
-    //met à jour l'affichage du score des joueur
+    //met à jour l'affichage du score des joueurs
     updateDisplay()
-    
+    //on vérifie si un joueur a gagné à chaques décrémentation du score total
     checkScore(volleySum)
   }
 }
@@ -269,6 +277,7 @@ function resetGameLoop() {
   gameIsStarted = false
   //remet l'index du joueur actuel à zéro
   currentPlayerIndex = 0
+  //retire le bouton Raté
   createStartBtn()
 }
 

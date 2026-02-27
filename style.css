@@ -90,4 +90,20 @@ div.info {
 
 .startBtn {
     width: 100%;
+    border-radius: 77px;
+    border: 10px solid #1E3799;
+    background-color: #4A69BD;
+    font-size: 64px;
+    font-family: "Pixelify Sans", sans-serif;
+    color: #1E3799;
+}
+
+.missedBtn {
+    width: 100%;
+    border-radius: 77px;
+    border: 10px solid #4A1F82;
+    background-color: #9747FF;
+    font-size: 64px;
+    font-family: "Pixelify Sans", sans-serif;
+    color: #4A1F82;
 }
