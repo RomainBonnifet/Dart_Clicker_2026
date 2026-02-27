@@ -8,12 +8,12 @@ const arrayPlayers = [];
 const arrayCurrentVolley = [];
 let currentPlayerName = '';
 let currentPlayerIndex = 0;
+let gameIsStarted = false
 
 //sélecteur display
 const displayInfoContainer = document.querySelector(".info");
 const divPlayersContainer = document.createElement("div");
 displayInfoContainer.appendChild(divPlayersContainer);
-
 
 class Player {
   constructor(name) {
@@ -29,7 +29,10 @@ let playerForm = document.querySelector("#formAddPlayer");
 // on annule le comportement par défault du form pour créer un nouveau joueur
 playerForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  createNewPlayer();
+  //on s'assure que la partie n'est pas lancée pour pouvoir continuer à ajouter des joueurs
+  if (!gameIsStarted) {
+    createNewPlayer();
+  }
 });
 
 function createNewPlayer() {
@@ -68,17 +71,27 @@ function displayLastPlayer() {
   const player = arrayPlayers[arrayPlayers.length - 1];
   //Créer une div d'affichage individuelle du joueur qui ira dans la div d'affichage globale des joueurs dans le DOM
   const divPlayerStats = document.createElement("div");
+  //ajoute une class pour le css
+  divPlayerStats.classList.add('playerStat')
   // On ajoute un ID unique basé sur l'index du joueur pour actualiser plus tard l'affichage du bon joueur
   divPlayerStats.id = `player-container-${arrayPlayers.length - 1}`;
   // Ajoute la div indiv du joueur dans la div d'affichage des joueurs du DOM
   divPlayersContainer.appendChild(divPlayerStats);
-
   //Même principe, mais pour le nom du joueur
   const divNameStat = document.createElement("div");
   divNameStat.classList.add("nameStat");
   divNameStat.innerText = player.name;
   divPlayerStats.appendChild(divNameStat);
-
+  // pour l'historique de la dernière vollée
+  const volleyStatsContainer = document.createElement('div')
+  volleyStatsContainer.classList.add('volleyStatsContainer')
+  divPlayerStats.appendChild(volleyStatsContainer)
+  for (let i=0;i<3;i++) {
+    const volleyStatsCell = document.createElement('div')
+    volleyStatsCell.classList.add('cellStat')
+    volleyStatsCell.innerText = 0
+    volleyStatsContainer.appendChild(volleyStatsCell)
+  }
   // & le score de base du joueur
   const divScoreStat = document.createElement("div");
   divScoreStat.classList.add("scoreStat");
@@ -90,8 +103,16 @@ function updateDisplay() {
   // On cible le conteneur spécifique du joueur qui vient de jouer
   const playerDiv = document.querySelector(`#player-container-${currentPlayerIndex}`);
   if (playerDiv) {
+    //update de l'affichage du score total  du joueur
     const scoreDiv = playerDiv.querySelector(".scoreStat");
     scoreDiv.innerText = arrayPlayers[currentPlayerIndex].score;
+    //update de l'affichage des cellules qui correspondent à chaques fléchettes de chaques derniers lancés du joueur
+    const lastVolley = arrayPlayers[currentPlayerIndex].lastScores[arrayPlayers[currentPlayerIndex].lastScores.length - 1];
+    if (!lastVolley) return;
+    const cells = playerDiv.querySelectorAll(".cellStat")
+    cells[0].innerText = lastVolley.dart1;
+    cells[1].innerText = lastVolley.dart2;
+    cells[2].innerText = lastVolley.dart3;
   }
 }
 
@@ -108,17 +129,17 @@ function createStartBtn() {
   //Ajoute le texte dans le bouton
   startBtn.appendChild(startBtnText);
   //Ajoute  le bouton dans la div d'affichage des infos
-  divInfo.appendChild(startBtn);
+  divInfo.prepend(startBtn);
   //Créer un event listener pour lancer une fonction quand on clic sur le bouton
   startBtn.addEventListener("click", () => {
     define1stPlayer()
     console.log('partie lancée');
-    
+    //partie lancée donc l'ajout de joueur sera bloqué
+    gameIsStarted = true
     //Partie lancée donc on retire le bouton Start
     startBtn.remove();
   });
 }
-
 
 function define1stPlayer() {
   arrayPlayers[currentPlayerIndex].isCurrentPlayer = true
@@ -128,22 +149,18 @@ function define1stPlayer() {
 function defineNextPlayer() {
   // 1. On retire le statut de joueur actuel
   arrayPlayers[currentPlayerIndex].isCurrentPlayer = false;
-
   // 2. On vérifie si on est à la fin de la liste
   if (currentPlayerIndex === arrayPlayers.length - 1) {
     currentPlayerIndex = 0; // On revient au début
     console.log('Retour au premier joueur');
     console.log(arrayPlayers);
-    
   } else {
     currentPlayerIndex++; // On passe au suivant (équivalent à currentPlayerIndex += 1)
     console.log('Joueur suivant');
     console.log(arrayPlayers);
   }
-
   // 3. On définit le nouveau joueur actuel
   arrayPlayers[currentPlayerIndex].isCurrentPlayer = true;
-  
   // 4. On relance la gestion du score
   handleVolleyScore();
 }
@@ -223,43 +240,45 @@ function handleVolleyScore() {
 // si score négatif, on annule la dernière vollée
 function checkScore(volleySum) {
   const player = arrayPlayers[currentPlayerIndex];
-
   if (player.score === 0) {
     alert(player.name + " a gagné !");
     resetGameLoop()
     return;
   }
-
   if (player.score < 0) {
     alert("Vous devez finir par un score exact !");
     // on annule la volée précédente
     player.score += volleySum;
   }
-
   updateDisplay();
-
   defineNextPlayer();
 }
 
 // pour enfin re-afficher le bouton Start qui va relancer une boucle de jeu. 
 function resetGameLoop() {
-  //On va boucler sur chaques joueurs de arrayPlayers pour remettre score à zéro,
+  //On va boucler sur chaques joueurs de arrayPlayers pour remettre score à la valeur d'origine,
   // vider le tableau d'historiques du joueurs lastScores,
   // et remettre à false isCurrentPlayer 
   arrayPlayers.forEach((player)=>{
     player.score = 301
     player.lastScores = []
     player.isCurrentPlayer = false
-    updateScoresDisplay()
+    resetScoresDisplay()
   })
-  console.log(arrayPlayers);
-  updateScoresDisplay()
+  //on remet la possibilité de rajouter un joueur avant de relancer une autre partie
+  gameIsStarted = false
+  //remet l'index du joueur actuel à zéro
+  currentPlayerIndex = 0
   createStartBtn()
 }
 
-function updateScoresDisplay () {
+function resetScoresDisplay () {
   const scoresDivs = document.querySelectorAll('.scoreStat')
   scoresDivs.forEach((scoreDiv)=>{
     scoreDiv.innerText = baseScore
+  })
+  const cells = document.querySelectorAll(".cellStat")
+  cells.forEach((cell)=>{
+    cell.innerText = 0
   })
 }

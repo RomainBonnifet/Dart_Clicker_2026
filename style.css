@@ -1,4 +1,93 @@
 body {
-    background-color: rgb(4, 26, 51);
+    background-color: rgb(1, 8, 16);
     color: antiquewhite;
+}
+
+div.container {
+    border: 8px solid white;
+    border-radius: 50px;
+    margin: 5px;
+}
+
+div.addPlayersContainer {
+    max-width: 100%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border: 1px solid black;
+    background-color: white;
+    border-radius: 40px;
+    margin: 20px 10px;
+    padding: 0 5px;
+}
+
+.addPlayersContainer h1 {
+    margin: 0 10px;
+    color: black;
+}
+
+.addPlayersContainer input {
+    border: none;
+    text-align: center;
+    font-size: 18px;
+}
+
+.addPlayersContainer button {
+    width: 100px;
+    height: 26px;
+
+    background-color: black;
+    color: aliceblue;
+    border-radius: 81px;
+}
+
+.addPlayersContainer h1,
+.addPlayersContainer input,
+.addPlayersContainer button {
+    font-family: "Pixelify Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+
+div.displayContainer {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.playerStat,
+.nameStat,
+.scoreStat,
+.volleyStatsContainer,
+.cellStat
+ {
+    border: 1px solid white;
+}
+
+div.playerStat {
+    display: flex;
+    justify-content: center;
+}
+
+div.volleyStatsContainer {
+    display: flex;
+}
+
+div.cible {
+    width: 50%;
+}
+
+div.info {
+    width: 40%;
+}
+
+.cible svg {
+    width: 100%;
+    height: 80vh;
+}
+
+.startBtn {
+    width: 100%;
 }
