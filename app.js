@@ -154,8 +154,7 @@ function createStartBtn() {
     arrayPlayers[currentPlayerIndex].isCurrentPlayer = true;
     //ajoute le bouton Raté à la place
     addMissedBtn();
-    //on ajoute la gameInfoBulle
-    addGameInfoBubble()
+
     //on lance le event listener sur la cible
     handleDartScore();
     //Partie lancée donc on retire le bouton Start
@@ -183,7 +182,6 @@ function handleDartScore() {
   return new Promise((resolve) => {
     //initialise la fonction qui va gérer la data en fonction du click user
     const onClick = (event) => {
-      //joue un son au clic
       playDartSounds();
       //setup l'event click sur chaques zones
       const zone = event.currentTarget;
@@ -201,7 +199,6 @@ function handleDartScore() {
       arrayCurrentVolley.push(score);
       //retourne la promesse score
       resolve(score);
-      //on appel la fonction qui gère le retour de la promesse
       handleVolleyScore();
     };
     const zones = document.querySelectorAll(".zone");
@@ -266,6 +263,7 @@ function checkScore(volleySum) {
     player.score += volleySum;
   }
   updateDisplay();
+
   defineNextPlayer();
 }
 
@@ -306,19 +304,7 @@ function playDartSounds() {
   });
 }
 
-
-function addGameInfoBubble() {
-  const gameInfoBubble = document.createElement('div')
-  gameInfoBubble.classList.add("gameInfoBubble")
-  const infoBubbleName = document.createElement("div")
-  infoBubbleName.innerText = "Joueur en cours"
-  gameInfoBubble.appendChild(infoBubbleName)
-  const infoBubbleLiveScore = document.createElement("div")
-  infoBubbleLiveScore.innerText = baseScore
-  gameInfoBubble.appendChild(infoBubbleLiveScore)
-  divPlayersContainer.prepend(gameInfoBubble)
+function sumArray(arr) {
+  return arr.reduce((acc, value) => acc + value, 0);
 }
 
-function updateGameInfoBubble() {
-  const gameInfoBubble = document.querySelector("gameInfoBubble")
-}
