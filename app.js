@@ -1,310 +1,411 @@
-// sélecteur data
-const inputPlayerName = document.querySelector("#playerName");
-let baseScore = 301;
-
-//sélecteurs algo
-const arrayPlayers = [];
-const arrayCurrentVolley = [];
-let currentPlayerName = "";
-let currentPlayerIndex = 0;
-let gameIsStarted = false;
-
-//sélecteur display
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const BASE_SCORE = 301; // TODO : ajouter la possibilité de changer la valeur du score de base par le user (501)
+// ============================================================
+// SÉLECTEURS DOM
+// ============================================================
+const inputPlayerName     = document.querySelector("#playerName");
 const displayInfoContainer = document.querySelector(".info");
-const divPlayersContainer = document.createElement("div");
-displayInfoContainer.appendChild(divPlayersContainer);
-
+const divPlayersContainer  = document.querySelector(".divPlayersContainer");
+// ============================================================
+// ÉTAT DU JEU
+// ============================================================
+const arrayPlayers      = [];
+let currentPlayerIndex  = 0;
+let gameIsStarted       = false;
+// Vollée en cours : tableau de max 3 scores
+let arrayCurrentVolley  = [];
+// Verrou anti-double-clic
+let isProcessingDart    = false;
+// ============================================================
+// CLASSE JOUEUR
+// ============================================================
 class Player {
   constructor(name) {
-    this.name = name;
-    this.score = baseScore;
-    this.lastScores = [];
+    this.name           = name;
+    this.score          = BASE_SCORE; // BUG CORRIGÉ : utilise la constante
+    this.lastScores     = [];
     this.isCurrentPlayer = false;
   }
 }
+// ============================================================
+// AJOUT DE JOUEURS
+// ============================================================
+const playerForm = document.querySelector("#formAddPlayer");
 
-// écouteur d'event sur le formulaire pour ajouter un joueur
-let playerForm = document.querySelector("#formAddPlayer");
-// on annule le comportement par défault du form pour créer un nouveau joueur
 playerForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  //on s'assure que la partie n'est pas lancée pour pouvoir continuer à ajouter des joueurs
   if (!gameIsStarted) {
     createNewPlayer();
   }
 });
 
 function createNewPlayer() {
-  try {
-    // Vérification du champs
-    if (inputPlayerName.value.trim() === "") {
-      throw new Error("Le nom du joueur ne peut être vide.");
-    }
-    if (inputPlayerName !== "") {
-      //Créer un nouveau joueur grace au nom renseigné par l'utilisateur
-      let newPlayer = new Player(inputPlayerName.value);
-      //Ajoute chaques joueurs au tableau des joueurs
-      arrayPlayers.push(newPlayer);
-      //Vide le champs du formulaire
-      inputPlayerName.value = "";
-      //Affiche les joueurs + leurs points de départ dans le DOM
-      displayLastPlayer();
-    }
-    //Si un joueurs est ajouté, on appel la fonction qui affiche le bouton Start dans le DOM
-    if (arrayPlayers.length === 1) {
-      createStartBtn();
-    }
-    //Gestion & affichage de l'erreur
-  } catch (error) {
-    alert(error.message);
+  const name = inputPlayerName.value.trim(); //Retire les éventuels espaces
+
+  if (name === "") {
+    alert("Le nom du joueur ne peut être vide.");
+    inputPlayerName.value = ""; 
+    return;
+  }
+  if (name.length > 12 ) {
+    alert("Le nom du joueur ne doit pas dépasser 12 caractères");
+    inputPlayerName.value = "";
+    return;
+  }
+  const newPlayer = new Player(name);
+  arrayPlayers.push(newPlayer);
+  inputPlayerName.value = "";
+  displayNewPlayer(newPlayer, arrayPlayers.length - 1);
+  // si au moins un joueur est ajouté, on peut lancer la partie
+  if (arrayPlayers.length === 1) {
+    createStartBtn();
+    inputPlayerName.value = "";
   }
 }
 
-function displayLastPlayer() {
-  divPlayersContainer.classList.add("divPlayersContainer");
-  //Défini le joueur à afficher : la dernière entrée du tableau des joueurs
-  const player = arrayPlayers[arrayPlayers.length - 1];
-  //Créer une div d'affichage individuelle du joueur qui ira dans la div d'affichage globale des joueurs dans le DOM
+// ============================================================
+// AFFICHAGE DES JOUEURS
+// ============================================================
+
+// BUG CORRIGÉ : renommée pour clarté, reçoit le joueur ET son index en paramètre
+function displayNewPlayer(player, index) {
+
   const divPlayerStats = document.createElement("div");
-  //ajoute une class pour le css
   divPlayerStats.classList.add("playerStat");
-  // On ajoute un ID unique basé sur l'index du joueur pour actualiser plus tard l'affichage du bon joueur
-  divPlayerStats.id = `player-container-${arrayPlayers.length - 1}`;
-  // Ajoute la div indiv du joueur dans la div d'affichage des joueurs du DOM
+  divPlayerStats.id = `player-container-${index}`;
   divPlayersContainer.appendChild(divPlayerStats);
-  //Même principe, mais pour le nom du joueur
+  divPlayersContainer.classList.remove('hidden')
+
   const divNameStat = document.createElement("div");
   divNameStat.classList.add("nameStat");
   divNameStat.innerText = player.name;
   divPlayerStats.appendChild(divNameStat);
-  // pour l'historique de la dernière vollée
+
   const volleyStatsContainer = document.createElement("div");
   volleyStatsContainer.classList.add("volleyStatsContainer");
   divPlayerStats.appendChild(volleyStatsContainer);
+
   for (let i = 0; i < 3; i++) {
-    const volleyStatsCell = document.createElement("div");
-    volleyStatsCell.classList.add("cellStat");
-    volleyStatsCell.innerText = "00";
-    volleyStatsContainer.appendChild(volleyStatsCell);
+    const cell = document.createElement("div");
+    cell.classList.add("cellStat");
+    cell.innerText = "00";
+    volleyStatsContainer.appendChild(cell);
   }
-  // & le score de base du joueur
+
   const divScoreStat = document.createElement("div");
   divScoreStat.classList.add("scoreStat");
   divScoreStat.innerText = player.score;
   divPlayerStats.appendChild(divScoreStat);
+
+  divPlayersContainer.appendChild(divPlayerStats)
 }
 
-function updateDisplay() {
-  // On cible le conteneur spécifique du joueur qui vient de jouer
-  const playerDiv = document.querySelector(
-    `#player-container-${currentPlayerIndex}`,
-  );
-  if (playerDiv) {
-    //update de l'affichage du score total  du joueur
-    const scoreDiv = playerDiv.querySelector(".scoreStat");
-    scoreDiv.innerText = arrayPlayers[currentPlayerIndex].score;
-    //update de l'affichage des cellules qui correspondent à chaques fléchettes de chaques derniers lancés du joueur
-    const lastVolley =
-      arrayPlayers[currentPlayerIndex].lastScores[
-        arrayPlayers[currentPlayerIndex].lastScores.length - 1
-      ];
-    console.log(lastVolley);
-    console.log(playerDiv);
+// Met à jour l'affichage du score et des cellules après validation d'une vollée
+function updateDisplayAfterVolley() {
+  const playerDiv = document.querySelector(`#player-container-${currentPlayerIndex}`);
+  if (!playerDiv) return;
 
-    const darts = ["dart1", "dart2", "dart3"];
-    const cells = playerDiv.querySelectorAll(".cellStat");
+  const player   = arrayPlayers[currentPlayerIndex];
+  const scoreDiv = playerDiv.querySelector(".scoreStat");
+  scoreDiv.innerText = player.score;
+  if (player.score < 10) {
+    scoreDiv.innerText = "00" + player.score
+  }
+  else if (player.score < 100) {
+    scoreDiv.innerText = "0" + player.score
+  }
 
-    darts.forEach((dart, index) => {
-      if (cells[index]) {
-        if (lastVolley[dart] <= 9) {
-          cells[index].textContent = "0" + lastVolley[dart];
-        } else {
-          cells[index].textContent = lastVolley[dart];
-        }
-      }
-    });
+  const lastVolley = player.lastScores[player.lastScores.length - 1];
+  const cells      = playerDiv.querySelectorAll(".cellStat");
+
+  ["dart1", "dart2", "dart3"].forEach((dart, index) => {
+    if (cells[index]) {
+      const val = lastVolley[dart];
+      cells[index].textContent = val <= 9 ? "0" + val : String(val);
+    }
+  });
+}
+
+// NOUVEAU : met à jour le panneau live (score du joueur décrémenté en temps réel)
+function updateLivePanel(dartScore) {
+  const player        = arrayPlayers[currentPlayerIndex];
+  const dartNum       = arrayCurrentVolley.length; // après push, c'est déjà 1, 2 ou 3
+
+  const liveDartDiv   = document.querySelector(`#live-dart-${dartNum}`);
+  const liveScoreDiv  = document.querySelector("#live-score");
+  const liveNameDiv   = document.querySelector("#live-player-name");
+
+  if (liveNameDiv)  liveNameDiv.innerText  = player.name;
+  if (liveDartDiv)  liveDartDiv.innerText  = formatScore(dartScore);
+
+  // Score décrémenté temporairement pour l'affichage live
+  const provisionalScore = player.score - arrayCurrentVolley.reduce((a, b) => a + b, 0);
+  if (liveScoreDiv) {
+    liveScoreDiv.innerText = provisionalScore < 0 ? "⚠️ Bust !" : provisionalScore;
+    liveScoreDiv.style.color = provisionalScore < 0 ? "#e85d5d" : "#5ec8a0";
   }
 }
 
-//Créer un bouton pour commencer la partie une fois qu'au moins un joueur a été ajouté et le supprime quand la partie est lancée
+// Réinitialise le panneau live pour le prochain joueur
+function resetLivePanel() {
+  const player = arrayPlayers[currentPlayerIndex];
+  document.querySelector("#live-player-name").innerText = player.name;
+  document.querySelector("#live-score").innerText = player.score;
+  document.querySelector("#live-score").style.color = "";
+  ["#live-dart-1","#live-dart-2","#live-dart-3"].forEach(id => {
+    document.querySelector(id).innerText = "—";
+  });
+}
+
+function formatScore(val) {
+  return val <= 9 ? "0" + val : String(val);
+}
+
+// ============================================================
+// BOUTON START
+// ============================================================
 function createStartBtn() {
-  let missedBtn = document.querySelector(".missedBtn");
-  if (missedBtn) {
-    missedBtn.remove();
-  }
-  let infoGame = document.querySelector(".infoGame");
-  if (infoGame) {
-    infoGame.remove();
-  }
-  //Créer le bouton
+  // Nettoyage des éléments précédents
+  document.querySelector(".missedBtn")?.remove();
+  document.querySelector(".infoGame")?.remove();
+  document.querySelector(".livePanel")?.remove();
+
   const startBtn = document.createElement("button");
-  //Créer le texte du bonton
-  const startBtnText = document.createTextNode("Start");
-  //ajoute une class au btn
   startBtn.classList.add("startBtn");
-  //Ajoute le texte dans le bouton
-  startBtn.appendChild(startBtnText);
-  //Ajoute  le bouton dans la div d'affichage des infos
+  startBtn.textContent = "Start";
   displayInfoContainer.prepend(startBtn);
-  //Créer un event listener pour lancer une fonction quand on clic sur le bouton
+
   startBtn.addEventListener("click", () => {
-    //partie lancée donc l'ajout de joueur sera bloqué et missedBtn sera activé
     gameIsStarted = true;
-    //on définie le premier joueur en currentPlayer
-    arrayPlayers[currentPlayerIndex].isCurrentPlayer = true;
-    //ajoute le bouton Raté à la place
-    addMissedBtn();
-
-    //on lance le event listener sur la cible
-    handleDartScore();
-    //Partie lancée donc on retire le bouton Start
     startBtn.remove();
+
+    arrayPlayers[currentPlayerIndex].isCurrentPlayer = true;
+
+    addMissedBtn();
+    createLivePanel();
+    resetLivePanel();
+    listenForDart();
   });
 }
 
-function defineNextPlayer() {
-  // retire le statut de joueur actuel
-  arrayPlayers[currentPlayerIndex].isCurrentPlayer = false;
-  //  vérifie si on est à la fin de la liste
-  if (currentPlayerIndex === arrayPlayers.length - 1) {
-    currentPlayerIndex = 0; // On revient au début
-  } else {
-    currentPlayerIndex++;
-  }
-  //définit le nouveau joueur actuel
-  arrayPlayers[currentPlayerIndex].isCurrentPlayer = true;
-  //relance la gestion du score
-  handleVolleyScore();
+// ============================================================
+// PANNEAU LIVE (NOUVEAU)
+// ============================================================
+function createLivePanel() {
+  document.querySelector(".livePanel")?.remove();
+
+  const panel = document.createElement("div");
+  panel.classList.add("livePanel");
+  panel.innerHTML = `
+    <div class="live-title">Tour de  <span id="live-player-name">—</span> 🎯</div>
+    <div class="live-darts">
+      <div class="live-dart-cell"><span class="live-dart-label">🎯 1</span><span id="live-dart-1">—</span></div>
+      <div class="live-dart-cell"><span class="live-dart-label">🎯 2</span><span id="live-dart-2">—</span></div>
+      <div class="live-dart-cell"><span class="live-dart-label">🎯 3</span><span id="live-dart-3">—</span></div>
+    </div>
+    <div class="live-score-row">Score restant : <span id="live-score">—</span></div>
+  `;
+  divPlayersContainer.prepend(panel);
 }
 
-function handleDartScore() {
-  //on utilise une promesse car on attend le clic du user pour continuer le script
-  return new Promise((resolve) => {
-    //initialise la fonction qui va gérer la data en fonction du click user
-    const onClick = (event) => {
-      playDartSounds();
-      //setup l'event click sur chaques zones
-      const zone = event.currentTarget;
-      //récupère le type de zone (simple ou double) de l'attribut data-type dans le HTML
-      const type = zone.dataset.type;
-      //idem pour data-value
-      const value = Number(zone.dataset.value);
-      //applique le multiple en fonction de la zone cliquée
-      let score = value;
-      if (type === "double") score *= 2;
-      if (type === "triple") score *= 3;
-      //retire l'event click pour s'assurer un seul score par appel
-      zones.forEach((z) => z.removeEventListener("click", onClick));
-      //ajoute le résultat de la flèchette au tableau de la volée en cours
-      arrayCurrentVolley.push(score);
-      //retourne la promesse score
-      resolve(score);
-      handleVolleyScore();
-    };
-    const zones = document.querySelectorAll(".zone");
-    zones.forEach((zone) => {
-      zone.addEventListener("click", onClick);
-    });
-  });
-}
-
+// ============================================================
+// BOUTON RATÉ
+// ============================================================
 function addMissedBtn() {
   if (!gameIsStarted) return;
-  let missedBtn = document.createElement("button");
-  missedBtn.classList.add("missedBtn");
-  missedBtn.classList.add("zone");
-  missedBtn.innerText = "Raté: +0";
-  missedBtn.setAttribute("data-value", "00");
+  document.querySelector(".missedBtn")?.remove();
+
+  const missedBtn = document.createElement("button");
+  missedBtn.classList.add("missedBtn", "zone");
+  missedBtn.innerText = "Raté : +0";
+  missedBtn.setAttribute("data-value", "0");
+  missedBtn.setAttribute("data-type", "simple");
   displayInfoContainer.prepend(missedBtn);
-  return missedBtn;
 }
 
-//gère le résultat de la vollée des 3 fléchettes, enregistre l'historique de chaques dart et le score total de chaques volée, par joueur
-function handleVolleyScore() {
-  //on s'assure que seulement 3 fléchettes seront comptabilisée
-  if (arrayCurrentVolley.length < 3) {
-    handleDartScore();
-  } else {
-    //une fois les 3 darts lancées,
-    //on remplis l'objet lastScores avec le résultat de chaque dart (pour conserver un historique des lancés)
-    //et le total de points de la vollée
-    let volleySum = arrayCurrentVolley.reduce((acc, value) => acc + value, 0);
-    let currentPlayerVolley = {
-      dart1: arrayCurrentVolley[0],
-      dart2: arrayCurrentVolley[1],
-      dart3: arrayCurrentVolley[2],
-      total: volleySum,
-    };
-    //sauvegarde de l'historique des vollées
-    arrayPlayers[currentPlayerIndex].lastScores.push(currentPlayerVolley);
-    //update du score restant du joueur en cours
-    arrayPlayers[currentPlayerIndex].score -= volleySum;
-    //on vide le tableau arrayCurrentVolley
-    arrayCurrentVolley.length = 0;
-    // TODO Fonction pour valider ou non la vollée actuelle
-    // alert("Valider la vollée ?");
-    //on vérifie si un joueur a gagné à chaques décrémentation du score total
-    checkScore(volleySum);
-  }
+// ============================================================
+// LOGIQUE DE JEU — ÉCOUTE D'UNE FLÉCHETTE
+// ============================================================
+
+function listenForDart() {
+  //On s'assure de n'avoir que 3 fléchettes à écouter
+  if (arrayCurrentVolley.length >= 3) return;
+
+  const zones = document.querySelectorAll(".zone");
+  //On initialise la fonction qui sera call par l'écouteur et qui va traiter le score chaques fléchette
+  const onClick = (event) => {
+    // Verrou anti-double-clic
+    if (isProcessingDart) return;
+    isProcessingDart = true;
+    // Joue un son à chaques fléchette comptabilisée
+    playDartSounds();
+
+    const zone  = event.currentTarget;
+    const type  = zone.dataset.type;
+    const value = Number(zone.dataset.value);
+
+    let score = value;
+    if (type === "double") score *= 2;
+    if (type === "triple") score *= 3;
+
+    // Détache tous les listeners
+    zones.forEach((z) => z.removeEventListener("click", onClick));
+    // Ajoute la valeur du score de la fléchette à la vollée en cours
+    arrayCurrentVolley.push(score);
+    // Met à jour le panneau live
+    updateLivePanel(score);
+    // Retire le verrou anti-double clic
+    isProcessingDart = false;
+    // Si la vollée est complète, on demande validation
+    if (arrayCurrentVolley.length === 3) {
+      showVolleyValidationModal();
+    } else {
+      // Sinon, on ré-écoute pour la prochaine fléchette
+      listenForDart();
+    }
+  };
+
+  zones.forEach((zone) => zone.addEventListener("click", onClick));
 }
 
-//vérifie si le joueur à atteint 0 : Fin de la partie
-// si score négatif, on annule la dernière vollée
-function checkScore(volleySum) {
+// ============================================================
+// MODALE DE VALIDATION DE VOLLÉE (NOUVEAU — remplace alert)
+// ============================================================
+function showVolleyValidationModal() {
+  const [d1, d2, d3] = arrayCurrentVolley;
+  const total         = d1 + d2 + d3;
+  const player        = arrayPlayers[currentPlayerIndex];
+  const newScore      = player.score - total;
+
+  // Crée la modale
+  const overlay = document.createElement("div");
+  overlay.classList.add("modalOverlay");
+
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">✅ Valider le tour ?</div>
+      <div class="modal-player">${player.name}</div>
+      <div class="modal-darts">
+        <span>🎯 ${formatScore(d1)}</span>
+        <span>🎯 ${formatScore(d2)}</span>
+        <span>🎯 ${formatScore(d3)}</span>
+      </div>
+      <div class="modal-total">Total : <strong>${total}</strong> pts</div>
+      <div class="modal-score ${newScore < 0 ? "bust" : ""}">
+        ${newScore < 0 ? "⚠️ Bust ! Vollée annulée automatiquement" : `Nouveau score : <strong>${newScore}</strong>`}
+      </div>
+      <div class="modal-buttons">
+        <button id="btn-validate" class="btn-validate">✅ Valider</button>
+        ${newScore >= 0 ? '<button id="btn-cancel" class="btn-cancel">❌ Annuler</button>' : ''}
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Si bust, seul "Valider" est disponible (annulation automatique)
+  document.querySelector("#btn-validate")?.addEventListener("click", () => {
+    overlay.remove();
+    applyVolley(newScore < 0); // true = annuler si bust
+  });
+
+  document.querySelector("#btn-cancel")?.addEventListener("click", () => {
+    overlay.remove();
+    cancelVolley();
+  });
+}
+
+// ============================================================
+// APPLICATION / ANNULATION DE LA VOLLÉE
+// ============================================================
+
+// REFACTORISÉ : responsabilité unique — appliquer une vollée validée
+function applyVolley(isBust) {
   const player = arrayPlayers[currentPlayerIndex];
+
+  if (isBust) {
+    // Score bust : on ne modifie pas le score
+    arrayCurrentVolley.length = 0;
+    resetLivePanel();
+    listenForDart();
+    return;
+  }
+
+  const total   = arrayCurrentVolley.reduce((acc, v) => acc + v, 0);
+  const [d1,d2,d3] = arrayCurrentVolley;
+
+  // Sauvegarde de l'historique
+  player.lastScores.push({ dart1: d1, dart2: d2, dart3: d3, total });
+  player.score -= total;
+
+  // Vide la vollée
+  arrayCurrentVolley.length = 0;
+
+  updateDisplayAfterVolley();
+
   if (player.score === 0) {
-    alert(player.name + " a gagné !");
+    alert(`🏆 ${player.name} a gagné !`);
     resetGameLoop();
     return;
   }
-  if (player.score < 0) {
-    alert("Vous devez finir par un score exact !");
-    // on annule la volée précédente
-    player.score += volleySum;
-  }
-  updateDisplay();
 
   defineNextPlayer();
 }
 
-// pour enfin re-afficher le bouton Start qui va relancer une boucle de jeu.
+// Annulation de vollée par le joueur (bouton "Annuler")
+function cancelVolley() {
+  arrayCurrentVolley.length = 0;
+  resetLivePanel();
+  listenForDart();
+}
+
+// ============================================================
+// PASSAGE AU JOUEUR SUIVANT
+// ============================================================
+function defineNextPlayer() {
+  arrayPlayers[currentPlayerIndex].isCurrentPlayer = false;
+
+  currentPlayerIndex = (currentPlayerIndex + 1) % arrayPlayers.length;
+
+  arrayPlayers[currentPlayerIndex].isCurrentPlayer = true;
+
+  resetLivePanel();
+  listenForDart();
+}
+
+// ============================================================
+// RESET DU JEU
+// ============================================================
 function resetGameLoop() {
-  //On va boucler sur chaques joueurs de arrayPlayers pour remettre score à la valeur d'origine,
-  // vider le tableau d'historiques du joueurs lastScores,
-  // et remettre à false isCurrentPlayer
   arrayPlayers.forEach((player) => {
-    player.score = 301;
-    player.lastScores = [];
+    player.score          = BASE_SCORE; // BUG CORRIGÉ : utilise la constante
+    player.lastScores     = [];
     player.isCurrentPlayer = false;
-    resetScoresDisplay();
   });
-  //on remet la possibilité de rajouter un joueur avant de relancer une autre partie
-  gameIsStarted = false;
-  //remet l'index du joueur actuel à zéro
-  currentPlayerIndex = 0;
-  //retire le bouton Raté
+
+  gameIsStarted          = false;
+  currentPlayerIndex     = 0;
+  arrayCurrentVolley.length = 0;
+
+  resetScoresDisplay();
   createStartBtn();
 }
 
 function resetScoresDisplay() {
-  const scoresDivs = document.querySelectorAll(".scoreStat");
-  scoresDivs.forEach((scoreDiv) => {
-    scoreDiv.innerText = baseScore;
+  document.querySelectorAll(".scoreStat").forEach((div) => {
+    div.innerText = BASE_SCORE;
   });
-  const cells = document.querySelectorAll(".cellStat");
-  cells.forEach((cell) => {
+  document.querySelectorAll(".cellStat").forEach((cell) => {
     cell.innerText = "00";
   });
 }
 
+// ============================================================
+// AUDIO
+// ============================================================
 function playDartSounds() {
   const sound = new Audio("sounds/dart.mp3");
-  sound.play().catch((err) => {
-    console.error("Erreur lecture audio :", err);
-  });
+  sound.play().catch((err) => console.error("Erreur lecture audio :", err));
 }
-
-function sumArray(arr) {
-  return arr.reduce((acc, value) => acc + value, 0);
-}
-

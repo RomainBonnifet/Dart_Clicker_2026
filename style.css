@@ -11,11 +11,9 @@ div.container {
 
 div.addPlayersContainer {
     max-width: 100%;
-
     display: flex;
     justify-content: space-between;
     align-items: center;
-
     border: 1px solid black;
     background-color: white;
     border-radius: 40px;
@@ -37,7 +35,6 @@ div.addPlayersContainer {
 .addPlayersContainer button {
     width: 100px;
     height: 26px;
-
     background-color: black;
     color: white;
     border-radius: 81px;
@@ -53,16 +50,18 @@ div.addPlayersContainer {
 }
 
 div.infoGame {
-    text-align: center;
-    font-size: 40px;
-    font-family: "Pixelify Sans", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 400;
-    font-style: normal;
-    border: 10px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 70px;
+    width: 100%;
     border-radius: 77px;
-    padding: 10px;
+    border: 10px solid white;
+    font-size: 3vw;
+    text-align: center;
+    font-family: "Pixelify Sans", sans-serif;
     color: white;
+    margin-top: 20px;
 }
 
 div.displayContainer {
@@ -71,19 +70,28 @@ div.displayContainer {
     margin-bottom: 20px;
 }
 
-.divPlayersContainer,
+
 .nameStat,
 .scoreStat,
-.volleyStatsContainer,
-.cellStat
- {
+.cellStat {
+    background: rgba(255, 255, 255, 0.07);
     border: 1px solid white;
     border-radius: 15px;
-    padding: 2px 5px;
+    padding: 5px;
+}
+
+.divPlayersContainer {
+    border: 1px solid white;
+    border-radius: 15px;
+    padding: 10px;
 }
 
 div.divPlayersContainer {
-        margin-top: 20px;
+    margin-top: 20px;
+}
+
+.hidden {
+    display: none;
 }
 
 div.playerStat {
@@ -91,15 +99,17 @@ div.playerStat {
     justify-content: flex-end;
     align-items: center;
     font-family: "Pixelify Sans", sans-serif;
-    font-size:3vw;
+    font-size: 3vw;
     margin: 5px 0;
 }
-
-
 
 div.volleyStatsContainer {
     display: flex;
     margin-left: auto;
+}
+
+div.scoreStat {
+    margin-left: 15px;
 }
 
 div.cible {
@@ -128,9 +138,11 @@ div.info {
     border-radius: 77px;
     border: 10px solid #1E3799;
     background-color: #4A69BD;
-    font-size: 64px;
+    font-size: 4vw;
     font-family: "Pixelify Sans", sans-serif;
     color: #1E3799;
+    cursor: pointer;
+    margin-top: 20px;
 }
 
 .missedBtn {
@@ -142,15 +154,225 @@ div.info {
     font-family: "Pixelify Sans", sans-serif;
     color: #4A1F82;
     margin-top: 20px;
+    cursor: pointer;
 }
+
 .missedBtn:hover {
     cursor: pointer;
 }
 
 .displayCurrentPlayer {
-    border: 1px solid white ;
+    border: 1px solid white;
 }
 
+table {
+    border-collapse: collapse;
+    border: 2px solid rgb(140 140 140);
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+th, td {
+    border: 1px solid rgb(160 160 160);
+    padding: 8px 10px;
+}
+
+td:last-of-type {
+    text-align: center;
+}
+
+div.arrayPlayerDisplay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* ============================================================
+   FONT POUR LES CHIFFRES
+   ============================================================ */
+
+div.live-darts,
+div.modal-darts,
+div.modal-total,
+div.modal-score,
+span#live-score,
+div.cellStat,
+div.scoreStat
+{
+font-family: "Iceland", sans-serif;
+}
+
+
+/* ============================================================
+   PANNEAU LIVE — NOUVEAU
+   ============================================================ */
+.livePanel {
+    background: rgba(255, 255, 255, 0.07);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    font-family: "Pixelify Sans", sans-serif;
+    color: white;
+}
+
+.live-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #aac4ff;
+}
+
+.live-title #live-player-name {
+    color: #fff;
+    font-size: 1.1em;
+}
+
+.live-darts {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+    margin: 20px;
+}
+
+.live-dart-cell {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 54px;
+}
+
+.live-dart-label {
+    font-size: 1em;
+    color: #aaa;
+}
+
+.live-dart-cell span:last-child {
+    font-size: 1.4em;
+    color: #e8c547;
+}
+
+.live-score-row {
+    font-size: 1.1em;
+    color: #ccc;
+}
+
+#live-score {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #5ec8a0;
+    margin-left: 6px;
+    transition: color 0.2s;
+}
+
+/* ============================================================
+   MODALE DE VALIDATION — NOUVEAU
+   ============================================================ */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 20, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal {
+    background: rgb(14, 30, 70);
+    border: 3px solid #4A69BD;
+    border-radius: 24px;
+    padding: 32px 40px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    font-family: "Pixelify Sans", sans-serif;
+    color: white;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.modal-title {
+    font-size: 1.5em;
+    margin-bottom: 8px;
+    color: #aac4ff;
+}
+
+.modal-player {
+    font-size: 2em;
+    color: #fff;
+    margin-bottom: 16px;
+}
+
+.modal-darts {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    font-size: 1.4em;
+    color: #e8c547;
+    margin-bottom: 12px;
+}
+
+.modal-total {
+    font-size: 1.1em;
+    color: #ccc;
+    margin-bottom: 8px;
+}
+
+.modal-score {
+    font-size: 1.2em;
+    color: #5ec8a0;
+    margin-bottom: 24px;
+}
+
+.modal-score.bust {
+    color: #e85d5d;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.btn-validate {
+    padding: 12px 28px;
+    background: #1e6b3f;
+    color: white;
+    border: 3px solid #5ec8a0;
+    border-radius: 50px;
+    font-size: 1.1em;
+    font-family: "Pixelify Sans", sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-validate:hover {
+    background: #2a8f55;
+}
+
+.btn-cancel {
+    padding: 12px 28px;
+    background: #6b1e1e;
+    color: white;
+    border: 3px solid #e85d5d;
+    border-radius: 50px;
+    font-size: 1.1em;
+    font-family: "Pixelify Sans", sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-cancel:hover {
+    background: #8f2a2a;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 @media screen and (max-width: 1000px) {
     div.displayContainer {
         flex-direction: column;
@@ -168,5 +390,13 @@ div.info {
     .cible svg {
         height: auto;
         width: 95%;
+    }
+
+    div.playerStat {
+        font-size: 5vw;
+    }
+
+    .missedBtn {
+        font-size: 6vw;
     }
 }
